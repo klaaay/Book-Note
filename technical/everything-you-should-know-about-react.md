@@ -7,6 +7,10 @@
     - [Dependency Injection(依赖注入)](#dependency-injection%e4%be%9d%e8%b5%96%e6%b3%a8%e5%85%a5)
     - [Event Handler(事件处理)](#event-handler%e4%ba%8b%e4%bb%b6%e5%a4%84%e7%90%86)
     - [Presentational vs Container](#presentational-vs-container)
+    - [Reaching Into A Component (深入某个组件内部)](#reaching-into-a-component-%e6%b7%b1%e5%85%a5%e6%9f%90%e4%b8%aa%e7%bb%84%e4%bb%b6%e5%86%85%e9%83%a8)
+  - [Anti - Patterns](#anti---patterns)
+    - [Props In Initial State(根据 props 去初始化 state)](#props-in-initial-state%e6%a0%b9%e6%8d%ae-props-%e5%8e%bb%e5%88%9d%e5%a7%8b%e5%8c%96-state)
+    - [Mutating State(不使用 setState 去操作 state)](#mutating-state%e4%b8%8d%e4%bd%bf%e7%94%a8-setstate-%e5%8e%bb%e6%93%8d%e4%bd%9c-state)
 
 https://hateonion.me/books/react-bits-cn/patterns/22.event-handlers.html
 
@@ -216,3 +220,69 @@ export default function(Component) {
   };
 }
 ```
+
+### Reaching Into A Component (深入某个组件内部)
+
+**概述**
+
+> 通过父组件去访问子组件. 比如一个能自动 focus 的输入框(通过父组件控制自动 focus)
+
+**方法**
+
+> Ref 和 useRef
+
+## Anti - Patterns
+
+### Props In Initial State(根据 props 去初始化 state)
+
+**概述**
+
+> 使用 props 去在 getInitialState 中生成初始 state(或者在 constructor 中初始化)很容易导致多个数据源的问题, 也会给使用者带来这样的疑问: 我们的真正的数据源到底来自哪? 这是因为 getInitialState 只在组件第一次初始化的时候被调用一次.
+
+**问题**
+
+> 有可能组件的 props 发生了改变但是组件却没有被更新
+
+**坏的实践**
+
+```javascript
+class SampleComponent extends Component {
+  // constructor function (or getInitialState)
+  constructor(props) {
+    super(props);
+    this.state = {
+      flag: false,
+      inputVal: props.inputValue
+    };
+  }
+
+  render() {
+    return <div>{this.state.inputVal && <AnotherComponent />}</div>;
+  }
+}
+```
+
+**好的实践**
+
+```javascript
+class SampleComponent extends Component {
+  // constructor function (or getInitialState)
+  constructor(props) {
+    super(props);
+    this.state = {
+      flag: false
+    };
+  }
+
+  render() {
+    return <div>{this.props.inputValue && <AnotherComponent />}</div>;
+  }
+}
+```
+
+### Mutating State(不使用 setState 去操作 state)
+
+**导致的问题**
+
+1. 在 state 改变时组件不会重新渲染.
+2. 在未来某个时候如果通过 setState 改变了 state, 那么这次未通过 setState 去改变的 state 将会同样生效.
