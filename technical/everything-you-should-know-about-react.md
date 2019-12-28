@@ -7,6 +7,18 @@
     - [Dependency Injection(依赖注入)](#dependency-injection%e4%be%9d%e8%b5%96%e6%b3%a8%e5%85%a5)
     - [Event Handler(事件处理)](#event-handler%e4%ba%8b%e4%bb%b6%e5%a4%84%e7%90%86)
     - [Presentational vs Container](#presentational-vs-container)
+    - [Reaching Into A Component (深入某个组件内部)](#reaching-into-a-component-%e6%b7%b1%e5%85%a5%e6%9f%90%e4%b8%aa%e7%bb%84%e4%bb%b6%e5%86%85%e9%83%a8)
+  - [Anti - Patterns](#anti---patterns)
+    - [Props In Initial State(根据 props 去初始化 state)](#props-in-initial-state%e6%a0%b9%e6%8d%ae-props-%e5%8e%bb%e5%88%9d%e5%a7%8b%e5%8c%96-state)
+    - [Mutating State(不使用 setState 去操作 state)](#mutating-state%e4%b8%8d%e4%bd%bf%e7%94%a8-setstate-%e5%8e%bb%e6%93%8d%e4%bd%9c-state)
+  - [Handling UX Variations](#handling-ux-variations)
+    - [HOC for Feature Toggles(用高阶组件去实现功能开关)](#hoc-for-feature-toggles%e7%94%a8%e9%ab%98%e9%98%b6%e7%bb%84%e4%bb%b6%e5%8e%bb%e5%ae%9e%e7%8e%b0%e5%8a%9f%e8%83%bd%e5%bc%80%e5%85%b3)
+    - [HOC props proxy(使用高阶组件做 props 代理)](#hoc-props-proxy%e4%bd%bf%e7%94%a8%e9%ab%98%e9%98%b6%e7%bb%84%e4%bb%b6%e5%81%9a-props-%e4%bb%a3%e7%90%86)
+  - [Styling](#styling)
+    - [HOC for Styling](#hoc-for-styling)
+  - [Gotchas(陷阱)](#gotchas%e9%99%b7%e9%98%b1)
+    - [Pure render checks(保证渲染的性能)](#pure-render-checks%e4%bf%9d%e8%af%81%e6%b8%b2%e6%9f%93%e7%9a%84%e6%80%a7%e8%83%bd)
+    - [Synthetic Events(React 中的 Synthetic 事件)](#synthetic-eventsreact-%e4%b8%ad%e7%9a%84-synthetic-%e4%ba%8b%e4%bb%b6)
 
 https://hateonion.me/books/react-bits-cn/patterns/22.event-handlers.html
 
@@ -214,5 +226,301 @@ export default function(Component) {
       return <Component />;
     }
   };
+}
+```
+
+### Reaching Into A Component (深入某个组件内部)
+
+**概述**
+
+> 通过父组件去访问子组件. 比如一个能自动 focus 的输入框(通过父组件控制自动 focus)
+
+**方法**
+
+> Ref 和 useRef
+
+## Anti - Patterns
+
+### Props In Initial State(根据 props 去初始化 state)
+
+**概述**
+
+> 使用 props 去在 getInitialState 中生成初始 state(或者在 constructor 中初始化)很容易导致多个数据源的问题, 也会给使用者带来这样的疑问: 我们的真正的数据源到底来自哪? 这是因为 getInitialState 只在组件第一次初始化的时候被调用一次.
+
+**问题**
+
+> 有可能组件的 props 发生了改变但是组件却没有被更新
+
+**坏的实践**
+
+```javascript
+class SampleComponent extends Component {
+  // constructor function (or getInitialState)
+  constructor(props) {
+    super(props);
+    this.state = {
+      flag: false,
+      inputVal: props.inputValue
+    };
+  }
+
+  render() {
+    return <div>{this.state.inputVal && <AnotherComponent />}</div>;
+  }
+}
+```
+
+**好的实践**
+
+```javascript
+class SampleComponent extends Component {
+  // constructor function (or getInitialState)
+  constructor(props) {
+    super(props);
+    this.state = {
+      flag: false
+    };
+  }
+
+  render() {
+    return <div>{this.props.inputValue && <AnotherComponent />}</div>;
+  }
+}
+```
+
+### Mutating State(不使用 setState 去操作 state)
+
+**导致的问题**
+
+1. 在 state 改变时组件不会重新渲染.
+2. 在未来某个时候如果通过 setState 改变了 state, 那么这次未通过 setState 去改变的 state 将会同样生效.
+
+## Handling UX Variations
+
+### HOC for Feature Toggles(用高阶组件去实现功能开关)
+
+> 使用高阶组件去实现我们的 toggle, 从而实现组件的多样性.
+
+```javascript
+// featureToggle.js
+const isFeatureOn = function(featureName) {
+  // return true or false
+};
+
+import { isFeatureOn } from "./featureToggle";
+
+const toggleOn = (featureName, ComposedComponent) =>
+  class HOC extends Component {
+    render() {
+      return isFeatureOn(featureName) ? (
+        <ComposedComponent {...this.props} />
+      ) : null;
+    }
+  };
+
+// 用法
+import AdsComponent from "./Ads";
+const Ads = toggleOn("ads", AdsComponent);
+```
+
+### HOC props proxy(使用高阶组件做 props 代理)
+
+> 使用高阶组件能帮助我们对于传入的 props 进行修饰后传入真正的组件(类似于 middleware 的概念)
+
+```javascript
+function HOC(WrappedComponent) {
+  return class Test extends Component {
+    render() {
+      const newProps = {
+        title: "New Header",
+        footer: false,
+        showFeatureX: false,
+        showFeatureY: true
+      };
+
+      return <WrappedComponent {...this.props} {...newProps} />;
+    }
+  };
+}
+```
+
+## Styling
+
+### HOC for Styling
+
+**概述**
+
+> 有时有一些组件可能只需要很少的一部分 state 来维护一些很简单的交互, 我们也有充足的理由把这些组件作为可复用的组件.
+
+**例子**
+
+> Carousel 组件的交互
+
+```javascript
+// 高阶组件
+import React from "react";
+// 这个高阶组件其实可以被命名的更加通俗易懂, 比如Counter或者Cycle
+const CarouselContainer = Comp => {
+  class Carousel extends React.Component {
+    constructor() {
+      super();
+      this.state = {
+        index: 0
+      };
+      this.previous = () => {
+        const { index } = this.state;
+        if (index > 0) {
+          this.setState({ index: index - 1 });
+        }
+      };
+
+      this.next = () => {
+        const { index } = this.state;
+        this.setState({ index: index + 1 });
+      };
+    }
+
+    render() {
+      return (
+        <Comp
+          {...this.props}
+          {...this.state}
+          previous={this.previous}
+          next={this.next}
+        />
+      );
+    }
+  }
+  return Carousel;
+};
+export default CarouselContainer;
+
+// 纯UI component
+const Carousel = ({ index, ...props }) => {
+  const length = props.length || props.children.length || 0;
+
+  const sx = {
+    root: {
+      overflow: "hidden"
+    },
+    inner: {
+      whiteSpace: "nowrap",
+      height: "100%",
+      transition: "transform .2s ease-out",
+      transform: `translateX(${(index % length) * -100}%)`
+    },
+    child: {
+      display: "inline-block",
+      verticalAlign: "middle",
+      whiteSpace: "normal",
+      outline: "1px solid red",
+      width: "100%",
+      height: "100%"
+    }
+  };
+
+  const children = React.Children.map(props.children, (child, i) => {
+    return <div style={sx.child}>{child}</div>;
+  });
+
+  return (
+    <div style={sx.root}>
+      <div style={sx.inner}>{children}</div>
+    </div>
+  );
+};
+
+// 最后的Carousel组件
+const HeroCarousel = props => {
+  return (
+    <div>
+      <Carousel index={props.index}>
+        <div>Slide one</div>
+        <div>Slide two</div>
+        <div>Slide three</div>
+      </Carousel>
+      <Button onClick={props.previous} children="Previous" />
+      <Button onClick={props.next} children="Next" />
+    </div>
+  );
+};
+
+// 我们通过在外面包裹一层container组件来给这个组件带来更多的功能.
+export default CarouselContainer(HeroCarousel);
+
+// 用法
+const Carousel = () => (
+  <div>
+    <HeroCarousel />
+  </div>
+);
+```
+
+## Gotchas(陷阱)
+
+### Pure render checks(保证渲染的性能)
+
+**概述**
+
+> 当非基本类型（例如对象，数组，函数）作为 prop 传入组件的时候有时候尽管表面上两个数值是相等的，但是由于每次都是初始化了一个新的实例，会造成多余的重渲染
+
+**例子**
+
+```javascript
+// 坏实践
+class Table extends PureComponent {
+  render() {
+    return (
+      <div>
+        {this.props.items.map(i => (
+          <Cell data={i} options={this.props.options || []} />
+        ))}
+      </div>
+    );
+  }
+}
+
+// 好实践
+const defaultval = []; // <---  也可以使用defaultProps
+class Table extends PureComponent {
+  render() {
+    return (
+      <div>
+        {this.props.items.map(i => (
+          <Cell data={i} options={this.props.options || defaultval} />
+        ))}
+      </div>
+    );
+  }
+}
+```
+
+> 当 options 为 null 时, 一个默认的空数组就会被当成 Props 传到组件里面去. 事实上每次传入的[]都相当于创建了新的 Array 实例. 在 JavaScript 里面, 不同的实例是有不同的实体的, 所以浅比较在这种情况下总是会返回 false, 然后组件就会被重新渲染. 因为两个实体不是同一个实体. 这就完全破坏了 React 对于我们组件渲染的优化
+
+### Synthetic Events(React 中的 Synthetic 事件)
+
+**概述**
+
+> React 在处理事件(event 时), 事实上使用了 SyntheticEvent 对象包裹了原生的 event 对象.
+> 这些 React 自己维护的对象是相互联系的, 意味着如果对于某一个事件, 我们给出了对应的响应函数(handler), 其他的 SyntheticEvent 对象也是可以重用的.这也是 React 提升性能的秘诀之一. 但是这也意味着, 如果想要通过异步的方式访问事件对象是不可能的, 因为出于 reuse 的原因, 事件对象里面的值都被重置了.
+
+下面这段代码会在控制台里面打出 null, 因为事件在 SyntheticEvent 池中被重用了.
+
+```javascript
+function handleClick(event) {
+  setTimeout(function() {
+    console.log(event.target.name);
+  }, 1000);
+}
+```
+
+为了避免这种情况, 你需要去保存你关心的事件的属性.
+
+```javascript
+function handleClick(event) {
+  let name = event.target.name;
+  setTimeout(function() {
+    console.log(name);
+  }, 1000);
 }
 ```
