@@ -4,6 +4,7 @@
   - [自行的技巧 - 伊万·约瑟夫博士（2012.01.14）](#%e8%87%aa%e8%a1%8c%e7%9a%84%e6%8a%80%e5%b7%a7---%e4%bc%8a%e4%b8%87%e7%ba%a6%e7%91%9f%e5%a4%ab%e5%8d%9a%e5%a3%ab20120114)
   - [知道自己该待在哪个圈子 - Konwing which cadre to stay(2016.09.03)](#%e7%9f%a5%e9%81%93%e8%87%aa%e5%b7%b1%e8%af%a5%e5%be%85%e5%9c%a8%e5%93%aa%e4%b8%aa%e5%9c%88%e5%ad%90---konwing-which-cadre-to-stay20160903)
   - [What makes you special? (2017.02.03)](#what-makes-you-special-20170203)
+  - [How to know your life purpose in 5 minutes (2013.02.02)](#how-to-know-your-life-purpose-in-5-minutes-20130202)
 
 ## 自行的技巧 - 伊万·约瑟夫博士（2012.01.14）
 
@@ -49,3 +50,10 @@ Being different is an advantage.
 There are difference that really suck...dont't let them define you!
 
 The single thing ervery one of us has in common is being human.So take a stand to defend your race, the human race.
+
+## How to know your life purpose in 5 minutes (2013.02.02)
+
+Happier people make it a point to make other people happy,and do things make them feel well taken care of and secure.
+那些更快乐的人专注让别人快乐,并让他们感觉被照顾和安全。
+
+我点开了这个视频我以为我不会有什么收获，果真如此。
